@@ -394,6 +394,17 @@ describe("ensureCanaryInstalled", () => {
     expect(installCalls()).toHaveLength(0);
   });
 
+  it("falls back to commit/tag pinning when checksum manifest parses to zero entries", async () => {
+    fs.writeFileSync(binaryPath(), "binary");
+    mockPublishedChecksums("# Just some comments\n\n\ninvalid line here\n");
+
+    const installed = await ensureCanaryInstalled(RESOLVED);
+
+    expect(installed.binaryPath).toBe(binaryPath());
+    expect(installCalls()).toHaveLength(0);
+    expect(httpsGetMock).toHaveBeenCalledTimes(2);
+  });
+
   // #220: cargoBinDir is private and zero-argument, so it is pinned through
   // its only observable effect on the install chain: the directory the
   // candidate binary path is joined onto, as handed to the Actions cache.
